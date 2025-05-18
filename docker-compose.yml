@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  api-service:
+    build:
+      context: ./api-service
+    ports:
+      - "8083:8083"
+    environment:
+      - API_PORT=8083
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - mailing-network
+
+  bot-service:
+    build:
+      context: ./bot-service
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - mailing-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mailing
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mailing-network
+
+  redis:
+    image: redis:7
+    networks:
+      - mailing-network
+
+volumes:
+  postgres_data:
+
+networks:
+  mailing-network:
+    driver: bridge
